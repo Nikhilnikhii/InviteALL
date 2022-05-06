@@ -2,13 +2,14 @@ require("dotenv").config();
 require('./config/database');
 const { application } = require('express');
 const express = require('express');
+const session=require('express-session');
 
 
 const bcryptjs = require('bcryptjs');
 const jsonwebtoken = require('jsonwebtoken');
 const cookieparser = require('cookie-parser');
-const cookieSession=require('cookie-session');
-const passport=require('passport');
+//const cookieSession=require('cookie-session');
+
 
 const ejs=require('ejs');
 
@@ -26,15 +27,22 @@ const { SECRET_KEY }=process.env;
 const app=express();
 
 //middlewares
-app.use(cookieSession({
-    name:"session",
-    keys:[SECRET_KEY],
-    maxAge:24*60*60*1000
+
+//app.use(express.static(path.join(__dirname,'public')));
+
+app.use(session({
+    secret:SECRET_KEY,
+    resave:false,
+    saveUninitialized:false,
+
 }));
+// app.use(cookieSession({
+//     name:"session",
+//     keys:[SECRET_KEY],
+//     maxAge:24*60*60*1000
+// }));
 app.use(cookieparser());
 app.use(express.json());
-app.use(passport.initialize());
-app.use(passport.session());
 
 app.use("/auth",route);
 
@@ -142,7 +150,8 @@ app.post("/login",async (req,res)=>{
                         expires:new Date(Date.now()+3*24*60*60*1000),
                         httpOnly:true
                     };
-
+                    
+                    console.log("user logged in succesfully");
                     res.status(200).cookie('token',tokn,options).json({
                         "success":true,
                         UserExsist
@@ -176,7 +185,8 @@ app.get('/dashboard2',Auth,(req,res)=>{
 
 app.get("/logout",(req,res)=>{
     console.log("user logged out succesfully");
-    req.logout();
+    
+    // TODO: need to handle clearing cookies
     res.clearCookie('token').send("user logged out succesfully");
 });
 
